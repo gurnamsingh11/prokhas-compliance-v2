@@ -1,0 +1,59 @@
+import logging
+import base64
+from src.openai_client.client import client
+
+logger = logging.getLogger(__name__)
+
+
+PROMPT = """You are a strict OCR engine.
+
+Rules:
+- Extract ONLY text that is explicitly visible in the image.
+- Do NOT infer, guess, complete, or correct text.
+- Do NOT add punctuation, formatting, or missing words.
+- Do NOT describe the image.
+- Do NOT explain anything.
+- If a word is unclear, output [UNCERTAIN].
+- Preserve exact casing, spacing, and line breaks.
+- Output ONLY the extracted text.
+- If no text is visible, output: [NO_TEXT]
+
+Violation of any rule is an error."""
+
+
+def encode_image(file_path):
+    with open(file_path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+
+def extract_text_from_image(image_path: str, prompt=PROMPT) -> str:
+    try:
+        base64_image = encode_image(image_path)
+
+        completion = client.chat.completions.create(
+            model="gpt-5.4-nano",
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/png;base64,{base64_image}"
+                            },
+                        },
+                    ],
+                }
+            ],
+        )
+
+        text = completion.choices[0].message.content.strip()
+
+    except FileNotFoundError:
+        raise
+    except Exception as exc:
+        logger.error("OCR failed")
+        raise
+
+    return text
