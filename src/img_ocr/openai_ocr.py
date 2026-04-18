@@ -26,34 +26,35 @@ def encode_image(file_path):
         return base64.b64encode(f.read()).decode()
 
 
-def extract_text_from_image(image_path: str, prompt=PROMPT) -> str:
-    try:
-        base64_image = encode_image(image_path)
+MESSAGES_TEMPLATE = [
+    {
+        "role": "developer",
+        "content": PROMPT,  # static → cacheable
+    }
+]
 
-        completion = client.chat.completions.create(
-            model="gpt-5.4-nano",
-            messages=[
+
+def extract_text_from_image(image_path: str) -> str:
+    base64_image = encode_image(image_path)
+
+    messages = MESSAGES_TEMPLATE + [
+        {
+            "role": "user",
+            "content": [
                 {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": prompt},
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/png;base64,{base64_image}"
-                            },
-                        },
-                    ],
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/png;base64,{base64_image}"},
                 }
             ],
-        )
+        }
+    ]
 
-        text = completion.choices[0].message.content.strip()
+    completion = client.chat.completions.create(
+        model="gpt-5.4-nano",
+        messages=messages,
+        temperature=0,
+        prompt_cache_key="ocr-v1",
+        prompt_cache_retention="24h",
+    )
 
-    except FileNotFoundError:
-        raise
-    except Exception as exc:
-        logger.error("OCR failed")
-        raise
-
-    return text
+    return completion.choices[0].message.content.strip()
