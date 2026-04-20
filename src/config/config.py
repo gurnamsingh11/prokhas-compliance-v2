@@ -35,4 +35,12 @@ settings = {
         "source": 4,
         "target": 4,
     },
+    "facility_amount_validation": {
+        "source": 1,
+        "target": 1,
+    },
+    "customer_credit_records_validation": {
+        "source": 5,
+        "target": 1,
+    },
 }

@@ -2,6 +2,10 @@ from src.pdf_img_extractor.extractor import pdf_to_images
 from src.img_ocr.openai_ocr import extract_text_from_image
 from src.validation.interest_profit_validation import extract_interest_rate
 from src.validation.purpose_financing_validation import extract_financing_purpose
+from src.validation.facility_amount_validation import extract_facility_amount
+from src.validation.customer_credit_records_litigation_suit import (
+    extract_credit_and_conduct,
+)
 from src.config.config import settings, delete_directories_from_paths
 
 
@@ -16,6 +20,8 @@ def orchestrate_workflow(workflow, source_pdf, target_pdf, settings=settings):
     workflow_map = {
         "interest_profit_validation": extract_interest_rate,
         "purpose_financing_validation": extract_financing_purpose,
+        "facility_amount_validation": extract_facility_amount,
+        "customer_credit_records_validation": extract_credit_and_conduct,
     }
 
     if workflow not in workflow_map:
