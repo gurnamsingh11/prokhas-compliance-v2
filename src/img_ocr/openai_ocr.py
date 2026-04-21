@@ -27,7 +27,7 @@ STRUCTURED_PROMPTS = {
 Rules:
 - Return year labels as an ordered list
 - Return month codes exactly as shown, in order
-- Carefully Return delinquency values (0's) exactly as shown as a single string (preserve spacing)
+- Carefully Return (0's) values exactly as shown
 - Do not reorder, group, or interpret any values
 - Do not assume counts match or map months to years
 - Return only valid JSON matching the schema
@@ -112,7 +112,10 @@ def extract_text_from_image(image_path: str, target: str = None):
                                             "maxLength": 1,
                                         },
                                     },
-                                    "delinquency_pattern": {"type": "string"},
+                                    "delinquency_pattern": {
+                                        "type": "array",
+                                        "items": {"type": "string"},
+                                    },
                                 },
                                 "required": [
                                     "years",
