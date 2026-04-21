@@ -44,12 +44,19 @@ def orchestrate_workflow(workflow, source_pdf, target_pdf, settings=settings):
         logger.debug("Generated image paths: %s, %s", source_path, comparison_path)
 
         source_text = extract_text_from_image(source_path)
-        comparison_text = extract_text_from_image(comparison_path)
+        if workflow == "customer_credit_records_validation":
+            comparison_text = extract_text_from_image(
+                comparison_path, target="repayment_history"
+            )
+        else:
+            comparison_text = extract_text_from_image(comparison_path)
 
         logger.debug("Extracted text from both documents")
 
         validation_func = workflow_map[workflow]
-        validation = validation_func(source_text, comparison_text)
+        validation = validation_func(source_text)
+        if workflow == "customer_credit_records_validation":
+            validation["Actual Value"] = comparison_text["repayment_history"]
 
         logger.info("Validation result for %s: %s", workflow, validation)
 

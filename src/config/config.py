@@ -43,4 +43,5 @@ settings = {
         "source": 5,
         "target": 1,
     },
+    "insurance_validation": {"source": 0, "target": 1},
 }
