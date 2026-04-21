@@ -54,10 +54,12 @@ def orchestrate_workflow(workflow, source_pdf, target_pdf, settings=settings):
         logger.debug("Extracted text from both documents")
 
         validation_func = workflow_map[workflow]
-        validation = validation_func(source_text)
-        if workflow == "customer_credit_records_validation":
-            validation["Actual Value"] = comparison_text["repayment_history"]
 
+        if workflow == "customer_credit_records_validation":
+            validation = validation_func(source_text)
+            validation["Actual Value"] = comparison_text["repayment_history"]
+        else:
+            validation = validation_func(source_text, comparison_text)
         logger.info("Validation result for %s: %s", workflow, validation)
 
         if validation:
