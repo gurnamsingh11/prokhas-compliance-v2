@@ -166,3 +166,82 @@ def orchestrate_workflow(workflow, source_pdf, target_pdf, settings=settings):
                 logger.debug("Temporary directories cleaned up")
         except Exception as cleanup_error:
             logger.warning("Cleanup failed: %s", cleanup_error)
+
+
+def process_borrower_bankruptcy(letter_of_offer_path, legal_document_path):
+    """
+    Handles borrower bankruptcy validation + optional legal scoring.
+    Ensures cleanup of all generated image directories.
+    """
+
+    legal_document_bankruptcy_img_path = None
+    letter_of_offer_img_path = None
+    legal_document_img_path = None
+
+    try:
+        # -------------------------------
+        # STEP 1: Bankruptcy Detection
+        # -------------------------------
+        legal_document_bankruptcy_img_path = pdf_to_images(
+            legal_document_path, page_number=1
+        )
+
+        bankruptcy_result = validate_borrower_bankruptcy(
+            legal_document_bankruptcy_img_path
+        )
+
+        result = {
+            "borrower_bankruptcy": bankruptcy_result,
+            "judgement": None,
+        }
+
+        # -------------------------------
+        # STEP 2: Conditional Legal Scoring
+        # -------------------------------
+        if bankruptcy_result.get("is_borrower_bankruptcy", False):
+            letter_of_offer_img_path = pdf_to_images(
+                letter_of_offer_path, page_number=4
+            )
+
+            source_document = security_party_letter_offer(letter_of_offer_img_path)
+
+            legal_document_img_path = pdf_to_images(legal_document_path, page_number=6)
+
+            comparison_target_document = defendents_legal_document(
+                legal_document_img_path
+            )
+
+            judgement = get_legal_scoring(
+                source_document,
+                comparison_target_document,
+            )
+
+            result["judgement"] = judgement
+
+        return result
+
+    except Exception as e:
+        logger.exception("Borrower bankruptcy processing failed: %s", str(e))
+        raise
+
+    finally:
+        # -------------------------------
+        # Cleanup all created paths
+        # -------------------------------
+        try:
+            paths_to_delete = [
+                p
+                for p in [
+                    legal_document_bankruptcy_img_path,
+                    letter_of_offer_img_path,
+                    legal_document_img_path,
+                ]
+                if p
+            ]
+
+            if paths_to_delete:
+                delete_directories_from_paths(*paths_to_delete)
+                logger.debug("Cleaned up all temporary image directories")
+
+        except Exception as cleanup_error:
+            logger.warning("Cleanup failed: %s", cleanup_error)
