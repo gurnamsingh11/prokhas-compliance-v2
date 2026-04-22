@@ -43,5 +43,6 @@ settings = {
         "source": 5,
         "target": 1,
     },
-    "insurance_validation": {"source": 0, "target": 1},
+    "legal_scoring": {"source": 4, "target": 6},
+    "borrower_bankruptcy_validation": {"source": 1},
 }
